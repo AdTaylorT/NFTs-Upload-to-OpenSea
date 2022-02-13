@@ -15,15 +15,6 @@ from selenium.webdriver.support import expected_conditions as expect_cond
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-# Initialize Globals
-gui = Tk()
-gui.geometry('450x350')
-gui.title("NFTs Upload to OpenSea  ")
-main_directory = os.path.join(sys.path[0])
-is_polygon = BooleanVar(value=False)
-path_to_nfts = None
-
-
 class IField:
     def __init__(self, label, row_io, column_io, master=gui, grid_padx=0):
         """ initialize the object
@@ -50,74 +41,84 @@ class IField:
 
 class SaleItem:
     """ Static object placeholder for fields """
-    current_num = 0  # counter
+    _current_num = 0  # counter
+    _item_title_format = ""
+    _item_file_path = ""
+    _item_folder_path = ""
+    _item_image_format = "png"
 
-    collection_title = ""
-    collection_ext_link = ""
+    collection_link = ""
+    external_web_link = ""
     item_price = 1
-    item_image_format = "png"
-    item_file_path = ""
     item_description = ""
 
     @staticmethod
     def increment_current_item():
-        SaleItem.current_num += 1
+        SaleItem._current_num += 1
+
+    @staticmethod
+    def get_current_item_nu():
+        return SaleItem._current_num
 
     @staticmethod
     def get_current_item_str():
-        return str(SaleItem.current_num)
+        return str(SaleItem._current_num)
+
+    @staticmethod
+    def _build_abs_item_path():
+        SaleItem._item_file_path = os.path.join(
+            SaleItem._item_folder_path,
+            '.'.join([SaleItem.get_current_item_str(), SaleItem._item_image_format]))
+
+        return SaleItem._item_file_path
+
+    @staticmethod
+    def is_current_item_path_valid():
+        return os.path.isfile(SaleItem._build_abs_item_path())
 
     @staticmethod
     def get_current_item_absolute_path():
-        file_name_w_ext = '.'.join([SaleItem.get_current_item_str(), SaleItem.item_image_format])
-        file_path = os.path.join(SaleItem.item_file_path, file_name_w_ext)
-        if os.path.isfile(file_path):
-            return os.path.abspath(file_path)
+        if SaleItem.is_current_item_path_valid():
+            return SaleItem._item_file_path
         raise FileNotFoundError
 
-
-"""
-Initialize InputFields in gui
-the inputs from the form according to their input fields
-"""
-collection_link_input = IField("OpenSea Collection Link:", 2, 0, gui)
-start_num_input = IField("Start Number:", 3, 0, gui)
-end_num_input = IField("End Number:", 4, 0, gui)
-price = IField("Price:", 5, 0, gui)
-title = IField("Collection Title:", 6, 0, gui)
-description = IField("Description:", 7, 0, gui)
-file_format = IField("NFT Image Format:", 8, 0, gui)
-external_link = IField("External link:", 9, 0, gui)
-folder_location = IField("", 21, 0, gui, 80)
+    @staticmethod
+    def get_current_item_title():
+        return ''.join([SaleItem._item_title_format, SaleItem.get_current_item_str()])
 
 
 def main():
     """Start The Application """
     print("Start Application ... ")
-    project_path = main_directory
-    end_num = int(end_num_input.input_field.get())
 
-    SaleItem.collection_link = collection_link_input.input_field.get()
-    SaleItem.collection_title = title.input_field.get()
-    SaleItem.collection_ext_link = str(external_link.input_field.get())
-    SaleItem.item_price = float(price.input_field.get())
-    SaleItem.item_file_path = folder_location.input_field.get()
-    SaleItem.item_image_format = file_format.input_field.get()
-    SaleItem.item_description = description.input_field.get()
-    SaleItem.current_num = (int(start_num_input.input_field.get()))
+    SaleItem._current_num = (int(IField("Start Number:", 3, 0, gui).input_field.get()))
+    SaleItem._item_title_format = IField("Title:", 6, 0, gui).input_field.get()
+    SaleItem._item_folder_path = IField("", 21, 0, gui, 80).input_field.get()
+    SaleItem._item_image_format = IField("NFT Image Format:", 8, 0, gui).input_field.get()
+    SaleItem.collection_link = IField("OpenSea Collection Link:", 2, 0, gui).input_field.get()
+    SaleItem.external_web_link = str(IField("External link:", 9, 0, gui).input_field.get())
+    SaleItem.item_price = float(IField("Price:", 5, 0, gui).input_field.get())
+    SaleItem.item_description = IField("Description:", 7, 0, gui).input_field.get()
 
-    web_driver = init_chrome_options(project_path)
-    wait = WebDriverWait(web_driver, 15)
-
-    web_driver.get(SaleItem.collection_ext_link)
-    print(f"Start creating NFTs in Collection: [{SaleItem.collection_title:s}]")
-    while SaleItem.current_num <= end_num:
-        upload_all_files(SaleItem, wait, web_driver)
+    end_num = int(IField("End Number:", 4, 0, gui).input_field.get())
+    print(f"Start creating NFTs in Collection: [{SaleItem.collection_link:s}]")
+    while SaleItem.get_current_item_nu() <= end_num:
+        upload_file(SaleItem)
+        SaleItem.increment_current_item()
+        reset_webpage_to_submit_next()
 
     print("Done with all Items")
 
 
-def upload_all_files(item, wait, web_driver):
+def upload_file(item):
+    print(f"Starting Item: [{SaleItem.get_current_item_title():s}]")
+    web_driver.get(SaleItem.collection_link)
+    enter_image_details_on_webform(item)
+    submit_cost_for_item(item)
+    print('NFT creation completed!')
+
+
+def enter_image_details_on_webform(item):
     wait_xpath(wait, '//*[@id="__next"]/div[1]/main/div/div/div[1]/span/a')
     add_item_link = web_driver.find_element_by_xpath('//*[@id="__next"]/div[1]/main/div/div/div[1]/span/a')
     add_item_link.click()
@@ -128,17 +129,19 @@ def upload_all_files(item, wait, web_driver):
     image_upload_link.send_keys(item.get_current_item_absolute_path())
 
     name = web_driver.find_element_by_xpath('//*[@id="name"]')
-    name.send_keys(item.collection_title)  # +1000 for other folders #change name before "#"
+    name.send_keys(item.get_current_item_title())  # +1000 for other folders #change name before "#"
     time.sleep(0.5)
 
     ext_link = web_driver.find_element_by_xpath('//*[@id="external_link"]')
-    ext_link.send_keys(item.collection_ext_link)
+    ext_link.send_keys(item.external_web_link)
     time.sleep(0.5)
 
     desc = web_driver.find_element_by_xpath('//*[@id="description"]')
     desc.send_keys(item.item_description)
     time.sleep(0.5)
 
+
+def submit_cost_for_item(item):
     # Select Polygon blockchain if applicable
     if is_polygon.get():
         blockchain_button = \
@@ -160,7 +163,6 @@ def upload_all_files(item, wait, web_driver):
     cross.click()
     time.sleep(1)
 
-    main_page = web_driver.current_window_handle
     wait_xpath(wait, '//*[@id="__next"]/div[1]/main/div/div/div[1]/div/span[2]/a')
     sell = web_driver.find_element_by_xpath('//*[@id="__next"]/div[1]/main/div/div/div[1]/div/span[2]/a')
     sell.click()
@@ -173,13 +175,16 @@ def upload_all_files(item, wait, web_driver):
     listing = web_driver.find_element_by_css_selector("button[type='submit']")
     listing.click()
 
+
+def reset_webpage_to_submit_next():
     # wait until the window is available.
+    print("Wait until window is free ... ")
     while len(web_driver.window_handles) != 2:
         print('.', end='')
         time.sleep(.5)
 
+    main_page = web_driver.current_window_handle
     login_page = web_driver.window_handles[1]
-
     for handle in web_driver.window_handles:
         if handle != main_page:
             login_page = handle
@@ -194,9 +199,6 @@ def upload_all_files(item, wait, web_driver):
     # change control to main page
     web_driver.switch_to.window(main_page)
     time.sleep(1)
-
-    item.increment_current_item()
-    print('NFT creation completed!')
 
 
 def init_chrome_options(in_project_path):
@@ -248,13 +250,22 @@ def source_folder_location():
     side effect: modifies path_to_nfts
     :return: None
     """
-    default_path = folder_location.input_field.get()
-    global path_to_nfts
-    path_to_nfts = filedialog.askdirectory(initialdir=default_path) if os.path.isdir(default_path) \
+    folder_field = IField("", 21, 0, gui, 80)
+    image_folder = folder_field.input_field.get()
+    image_folder = filedialog.askdirectory(initialdir=image_folder) if os.path.isdir(image_folder) \
         else filedialog.askdirectory()
-    if path_to_nfts:
-        folder_location.insert_text(path_to_nfts)
+    if image_folder:
+        folder_field.insert_text(image_folder)
 
+
+# Initialize Globals
+gui = Tk()
+gui.geometry('450x350')
+gui.title("NFTs Upload to OpenSea  ")
+main_directory = os.path.join(sys.path[0])
+is_polygon = BooleanVar(value=False)
+web_driver = init_chrome_options(main_directory)
+wait = WebDriverWait(web_driver, 15)
 
 # gui buttons
 button_start = tkinter.Button(gui, width=20, bg="green", fg="white", text="Start", command=main)
