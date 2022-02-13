@@ -11,3 +11,5 @@ YOUTUBE VIDEO -> https://www.youtube.com/watch?v=dk_N53vnJiY
 
 
 Credits @cloudmaking 
+
+Note: ensure you are using python version 3.8+
