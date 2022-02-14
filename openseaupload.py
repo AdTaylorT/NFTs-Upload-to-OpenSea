@@ -11,8 +11,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tkform import TkForm
 
 tk_form: TkForm
-wait: WebDriverWait
 web_driver: WebDriver
+wait: WebDriverWait
 
 
 def main():
