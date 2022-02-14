@@ -45,7 +45,7 @@ class TkForm:
 
         # gui buttons
         upload_folder_input_button = tkinter.Button(_gui, width=20, text="NFTs Source Folder:",
-                                                    command=self.source_folder_location)
+                                                    command=self.update_ifield_text)
         upload_folder_input_button.grid(row=21, column=0, sticky='w')
         self.select_source_folder_button = upload_folder_input_button
         self.select_source_folder_button.lift()
@@ -61,8 +61,7 @@ class TkForm:
         button_start.grid(row=25, column=1, sticky='w')
         self.start_button = button_start
 
-
-    def source_folder_location(self):
+    def update_ifield_text(self):
         """ Ask User for directory on clicking button, changes button name. \r\n
         :return: None
         """

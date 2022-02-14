@@ -29,7 +29,7 @@ def _start_web_driver_submissions():
 
     _Item = tk_form.init_item_for_form()
     web_driver = _init_chrome_options(tk_form.main_directory)
-    wait = WebDriverWait(web_driver, 15)
+    wait = WebDriverWait(web_driver, 240)
     end_num = int(tk_form.i_fields.get("End Number:").input_field.get())
     print(f"Start creating NFTs in Collection: [{_Item.collection_link:s}]")
     while _Item.get_current_item_nu() <= end_num:
@@ -54,13 +54,13 @@ def _enter_all_data_for_item(item):
 
     print("Wait for item data fields")
     _wait_xpath('//*[@id="media"]')
-    _enter_data_slice_for_element(item, '//*[@id="media"]', 0.5)
-    _enter_data_slice_for_element(item, '//*[@id="name"]', 0.5)
-    _enter_data_slice_for_element(item, '//*[@id="external_link"]', 0.5)
-    _enter_data_slice_for_element(item, '//*[@id="description"]', 0.5)
+    _enter_data_slice_for_element(item, '//*[@id="media"]', 5)
+    _enter_data_slice_for_element(item, '//*[@id="name"]', 5)
+    _enter_data_slice_for_element(item, '//*[@id="external_link"]', 5)
+    _enter_data_slice_for_element(item, '//*[@id="description"]', 5)
 
 
-def _enter_data_slice_for_element(item, xpath, wait_time=0.5):
+def _enter_data_slice_for_element(item, xpath, wait_time=5):
     print(f"Enter data for xpath: [{xpath:s}]")
     link = web_driver.find_element_by_xpath(xpath)
     link.send_keys(item.get_current_item_absolute_path())
@@ -113,7 +113,7 @@ def _reset_webdriver_to_submit_next():
     print("Wait until window is free ... ")
     while len(web_driver.window_handles) != 2:
         print('.', end='')
-        time.sleep(.5)
+        time.sleep(5)
 
     main_page = web_driver.current_window_handle
     login_page = web_driver.window_handles[1]
@@ -126,11 +126,11 @@ def _reset_webdriver_to_submit_next():
     _wait_css_selector("button[data-testid='request-signature__sign']")
     sign = web_driver.find_element_by_css_selector("button[data-testid='request-signature__sign']")
     sign.click()
-    time.sleep(1)
+    time.sleep(5)
 
     print("change control to main page")
     web_driver.switch_to.window(main_page)
-    time.sleep(1)
+    time.sleep(5)
 
 
 def _init_chrome_options(in_project_path):
@@ -151,6 +151,7 @@ def _wait_css_selector(css):
     except TimeoutException:
         print(f"Timed out waiting for element: [{css:s}]")
         print(TimeoutException)
+        pass  # until this is working, don't care about this exception
 
 
 def _wait_xpath(xpath):
@@ -160,6 +161,7 @@ def _wait_xpath(xpath):
     except TimeoutException:
         print(f"Timed out waiting for element: [{xpath:s}]")
         print(TimeoutException)
+        pass  # until this is working, don't care about this exception
 
 
 if __name__ == '__main__':
