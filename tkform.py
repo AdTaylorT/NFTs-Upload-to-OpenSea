@@ -1,6 +1,6 @@
 import os
+import platform
 import subprocess
-import sys
 import tkinter
 from tkinter import *
 from tkinter import filedialog
@@ -22,7 +22,7 @@ class TkForm:
     def __init__(self, start_upload):
         """ The gui form that will be used as input for Item values \r\n
         Note: Item creation effects tab order \r\n
-        :param _gui: the tkinter object itself
+        :param start_upload: the start_upload method
         """
         print("create gui")
         _gui = Tk()
@@ -30,7 +30,6 @@ class TkForm:
         _gui.geometry('450x350')
         _gui.title("NFTs Upload to OpenSea  ")
         self.gui = _gui
-        self.main_directory = os.path.join(sys.path[0])
         self.is_polygon = BooleanVar(value=False)
 
         # gui input fields
@@ -58,7 +57,7 @@ class TkForm:
         # move the tab_order of folder_field to be directly after the upload_folder button
         self.get_ifield(TkForm._folder_field).tkraise(aboveThis=upload_folder_input_button)
 
-        open_browser = tkinter.Button(_gui, width=20, text='Open Chrome Browser', command=self.open_chrome_profile)
+        open_browser = tkinter.Button(_gui, width=20, text='Configure Chrome', command=self.open_chrome_profile)
         open_browser.grid(row=22, column=1, sticky='w')
         self.open_browser_button = open_browser
 
@@ -77,13 +76,23 @@ class TkForm:
         if image_folder:
             self.i_fields.get(TkForm._folder_field).insert_text(image_folder)
 
-    def open_chrome_profile(self):
+    @staticmethod
+    def open_chrome_profile():
         """ Create a new Chrome subprocess\r\n
         :return: None
         """
-        subprocess.Popen(["start", "chrome", "--remote-debugging-port=8989",
-                          "--user-data-dir=" + self.main_directory + "/chrome_profile", ],
-                         shell=True, )
+        if platform.system() != "Windows":
+            exit(1)
+
+        usr_chrome_data = os.path.join(os.getenv('LOCALAPPDATA'), "Google", "Chrome", "User Data")
+        print(usr_chrome_data)
+        if not os.path.isdir(usr_chrome_data):
+            os.mkdir(usr_chrome_data)
+        directory_arg = ''.join(["--user-data-dir=", usr_chrome_data])
+        print(directory_arg)
+
+        debug_port = "--remote-debugging-port=9223"
+        subprocess.Popen(["start", "chrome", debug_port, directory_arg, "https://opensea.io/collections"], shell=True)
 
     def get_ifield(self, key):
         return self.i_fields.get(key).input_field
@@ -99,7 +108,7 @@ class TkForm:
 
         Item.collection_link = self.get_ifield_value(TkForm._collection_link)
         Item.external_web_link = str(self.get_ifield_value(TkForm._ext_link))
-        Item.price = float(self.get_ifield_value(TkForm._price))
+        Item.price = str(float(self.get_ifield_value(TkForm._price)))  # Ensure it's a float, but it's really a str
         Item.description = self.get_ifield_value(TkForm._description)
         return Item
 
