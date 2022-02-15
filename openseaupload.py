@@ -19,6 +19,8 @@ def main():
     global tk_form
     tk_form = TkForm(_start_web_driver_submissions)  # Create Form
     tk_form.gui.mainloop()  # Start Tk
+    # RHEl get version of chrome
+    # google-chrome --version | sed 's/Google Chrome //' | perl -nle 's/([^.]*).*// && print $1'
 
 
 def _start_web_driver_submissions():

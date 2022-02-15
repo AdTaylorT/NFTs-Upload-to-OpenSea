@@ -76,7 +76,7 @@ class TkForm:
         """ Create a new Chrome subprocess\r\n
         :return: None
         """
-        subprocess.Popen(["start", "chrome", "--remote-debugging-port=8989",
+        subprocess.Popen(["nohup google-chrome", "--remote-debugging-port=8989",
                           "--user-data-dir=" + self.main_directory + "/chrome_profile", ],
                          shell=True, )
 
