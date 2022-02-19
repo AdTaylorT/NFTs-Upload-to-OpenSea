@@ -20,7 +20,7 @@ class Item:
 
     collection_link = ""
     external_web_link = ""
-    price = 1
+    price = 0.00
     description = ""
 
     @staticmethod
@@ -34,6 +34,10 @@ class Item:
     @staticmethod
     def get_current_item_str():
         return str(Item._current_num)
+
+    @staticmethod
+    def get_price_str():
+        return str(Item.price)
 
     @staticmethod
     def _build_abs_item_path():
@@ -56,3 +60,47 @@ class Item:
     @staticmethod
     def get_current_item_title():
         return ''.join([Item._title_format, Item.get_current_item_str()])
+
+    @staticmethod
+    def validate_int(value):
+        try:
+            int(value)
+            return True
+        except ValueError:
+            pass
+        return False
+
+    @staticmethod
+    def validate_float(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            pass
+        return False
+
+    @staticmethod
+    def validate_url(value):
+        if "https" in value:
+            return True
+        return False
+
+    @staticmethod
+    def validate_img(value):
+        if value.endswith(".png"):
+            return True
+        return False
+
+    @staticmethod
+    def validate_folder(value):
+        if os.path.isdir(value):
+            return True
+        return False
+
+
+
+"""
+except ValueError as err:
+warning_popup(str(err))
+pass
+return Item"""
