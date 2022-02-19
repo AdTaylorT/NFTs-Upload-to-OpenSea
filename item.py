@@ -63,6 +63,8 @@ class Item:
 
     @staticmethod
     def validate_int(value):
+        if not value:
+            return True
         try:
             int(value)
             return True
@@ -72,6 +74,8 @@ class Item:
 
     @staticmethod
     def validate_float(value):
+        if not value:
+            return True
         try:
             float(value)
             return True
@@ -81,18 +85,25 @@ class Item:
 
     @staticmethod
     def validate_url(value):
+        if not value:
+            return True
         if "https" in value:
             return True
         return False
 
     @staticmethod
     def validate_img(value):
-        if value.endswith(".png"):
+        if not value:
+            return True
+        # ["JPG", "PNG", "GIF", "SVG", "MP4", "WEBM", "MP3", "WAV", "OGG", "GLB", "GLTF"]
+        if str.upper(value) in ["JPG", "PNG", "GIF", "SVG", "MP4", "WEBM", "MP3", "WAV", "OGG", "GLB", "GLTF"]:
             return True
         return False
 
     @staticmethod
     def validate_folder(value):
+        if not value:
+            return True
         if os.path.isdir(value):
             return True
         return False

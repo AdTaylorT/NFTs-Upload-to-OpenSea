@@ -36,15 +36,15 @@ class TkForm:
 
         # gui input fields
         self.i_fields = {
-            TkForm._collection_link: self.IField(self, TkForm._collection_link, Item.validate_url, 2, 0),
-            TkForm._start_num: self.IField(self, TkForm._start_num, Item.validate_int, 3, 0),
-            TkForm._end_num: self.IField(self, TkForm._end_num, Item.validate_int, 4, 0),
-            TkForm._price: self.IField(self, TkForm._price, Item.validate_float, 5, 0),
-            TkForm._title: self.IField(self, TkForm._title, None, 6, 0),
-            TkForm._description: self.IField(self, TkForm._description, None, 7, 0),
-            TkForm._nft_image_format: self.IField(self, TkForm._nft_image_format, Item.validate_img, 8, 0),
-            TkForm._ext_link: self.IField(self, TkForm._ext_link, None, 9, 0),
-            TkForm._folder_field: self.IField(self, TkForm._folder_field, Item.validate_folder, 21, 0, 80)}
+            TkForm._collection_link: self.IField(self, TkForm._collection_link, Item.validate_url, "fo", 2, 0),
+            TkForm._start_num: self.IField(self, TkForm._start_num, Item.validate_int, "k", 3, 0),
+            TkForm._end_num: self.IField(self, TkForm._end_num, Item.validate_int, "k", 4, 0),
+            TkForm._price: self.IField(self, TkForm._price, Item.validate_float, "k", 5, 0),
+            TkForm._title: self.IField(self, TkForm._title, None, "", 6, 0),
+            TkForm._description: self.IField(self, TkForm._description, None, "", 7, 0),
+            TkForm._nft_image_format: self.IField(self, TkForm._nft_image_format, Item.validate_img, "fo", 8, 0),
+            TkForm._ext_link: self.IField(self, TkForm._ext_link, None, "", 9, 0),
+            TkForm._folder_field: self.IField(self, TkForm._folder_field, "fo", Item.validate_folder, 21, 0, 80)}
 
         # check box
         polygon_check_box = tkinter.Checkbutton(_gui, text='Polygon Blockchain', variable=self.is_polygon)
@@ -119,7 +119,7 @@ class TkForm:
         delattr(self, 'popup')
 
     class IField:
-        def __init__(self, parent, label, callback, row_ind, column_ind, grid_padx=0):
+        def __init__(self, parent, label, callback, vdt, row_ind, column_ind, grid_padx=0):
             """ IField Helper object the process of creating InputFields\r\n
             :param parent: tk parent object
             :param label: (string) value to display as name
@@ -127,7 +127,13 @@ class TkForm:
             :param column_ind: (int) column position
             :param grid_padx: (int) optional to set grid width
             """
-            self.input_field = Entry(parent.gui, validate='focusout', justify=LEFT)
+            if vdt == 'k':
+                self.input_field = Entry(parent.gui, validate='key', justify=LEFT)
+            elif vdt == 'fo':
+                self.input_field = Entry(parent.gui, validate='focusout', justify=LEFT)
+            else:
+                self.input_field = Entry(parent.gui, justify=LEFT)
+
             if callback:
                 reg = parent.gui.register(callback)
                 self.input_field.config(validatecommand=(reg, '%P'))
