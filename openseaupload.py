@@ -1,3 +1,6 @@
+import os
+import platform
+import sys
 import time
 
 from selenium import webdriver
@@ -16,20 +19,26 @@ wait: WebDriverWait
 
 
 def main():
+    # TODO later story will elaborate on this for each system
+    if platform.system() != 'Windows':
+        return 1
+
     global tk_form
     tk_form = TkForm(_start_web_driver_submissions)  # Create Form
     tk_form.gui.mainloop()  # Start Tk
+    # RHEl get version of chrome
+    # google-chrome --version | sed 's/Google Chrome //' | perl -nle 's/([^.]*).*// && print $1'
 
 
 def _start_web_driver_submissions():
     """Start The Application """
     # TODO check if the webdriver/chrome has been started ...
     print("Start Application ... ")
-    global wait, web_driver
+    global wait
 
     _Item = tk_form.init_item_for_form()
-    web_driver = _init_chrome_options(tk_form.main_directory)
-    wait = WebDriverWait(web_driver, 240)
+    _init_web_driver()
+    wait = WebDriverWait(web_driver, 2)
     end_num = int(tk_form.i_fields.get("End Number:").input_field.get())
     print(f"Start creating NFTs in Collection: [{_Item.collection_link:s}]")
     while _Item.get_current_item_nu() <= end_num:
@@ -54,22 +63,22 @@ def _enter_all_data_for_item(item):
 
     print("Wait for item data fields")
     _wait_xpath('//*[@id="media"]')
-    _enter_data_slice_for_element(item, '//*[@id="media"]', 5)
-    _enter_data_slice_for_element(item, '//*[@id="name"]', 5)
-    _enter_data_slice_for_element(item, '//*[@id="external_link"]', 5)
-    _enter_data_slice_for_element(item, '//*[@id="description"]', 5)
+    _enter_data_slice_for_element(item.get_current_item_absolute_path(), '//*[@id="media"]', 2)
+    _enter_data_slice_for_element(item.get_current_item_title(), '//*[@id="name"]', 2)
+    _enter_data_slice_for_element(item.external_web_link, '//*[@id="external_link"]', 2)
+    _enter_data_slice_for_element(item.description, '//*[@id="description"]', 2)
 
 
-def _enter_data_slice_for_element(item, xpath, wait_time=5):
+def _enter_data_slice_for_element(field_value, xpath, wait_time=5):
     print(f"Enter data for xpath: [{xpath:s}]")
     link = web_driver.find_element_by_xpath(xpath)
-    link.send_keys(item.get_current_item_absolute_path())
+    link.send_keys(field_value)
     time.sleep(wait_time)
 
 
 def _submit_cost_for_item_in_currency(item):
     # Select Polygon blockchain if applicable
-    if tk_form.gui.is_polygon.get():
+    if tk_form.is_polygon.get():
         blockchain_button = \
             web_driver.find_element(By.XPATH,
                                     '//*[@id="__next"]/div[1]/main/div/div/section/div/form/div[7]/div/div[2]')
@@ -79,16 +88,18 @@ def _submit_cost_for_item_in_currency(item):
         polygon_button = web_driver.find_element(By.XPATH, polygon_button_location)
         polygon_button.click()
     print("currency selected")
+    time.sleep(1)
 
     create = web_driver.find_element_by_xpath(
         '//*[@id="__next"]/div[1]/main/div/div/section/div[2]/form/div/div[1]/span/button')
     web_driver.execute_script("arguments[0].click();", create)
     print("unsure ... execute some script ... picking a button")
-    time.sleep(1)
+    time.sleep(5)
+    # TODO check is a human is needed??
 
     _wait_css_selector("i[aria-label='Close']")
     close = web_driver.find_element_by_css_selector("i[aria-label='Close']")
-    print("click close")
+    print("click close -- on popup")
     close.click()
     time.sleep(1)
 
@@ -113,7 +124,7 @@ def _reset_webdriver_to_submit_next():
     print("Wait until window is free ... ")
     while len(web_driver.window_handles) != 2:
         print('.', end='')
-        time.sleep(5)
+        time.sleep(2)
 
     main_page = web_driver.current_window_handle
     login_page = web_driver.window_handles[1]
@@ -126,22 +137,26 @@ def _reset_webdriver_to_submit_next():
     _wait_css_selector("button[data-testid='request-signature__sign']")
     sign = web_driver.find_element_by_css_selector("button[data-testid='request-signature__sign']")
     sign.click()
-    time.sleep(5)
+    time.sleep(2)
 
     print("change control to main page")
     web_driver.switch_to.window(main_page)
-    time.sleep(5)
+    time.sleep(2)
 
 
-def _init_chrome_options(in_project_path):
+def _init_web_driver():
     """Helper Function to initialize chrome options """
+    global web_driver
+
+    chrome_driver_exec = os.path.join(sys.path[0], "chromedriver.exe")
+    if not os.path.isfile(chrome_driver_exec):
+        exit(1)
+
     opt = Options()
-    opt.add_experimental_option("debuggerAddress", "localhost:8989")
-    w_driver = webdriver.Chrome(
-        executable_path=in_project_path + "/chromedriver.exe",
-        options=opt,
-    )
-    return w_driver
+    opt.add_experimental_option("debuggerAddress", "localhost:9223")
+    print(chrome_driver_exec)
+    web_driver = webdriver.Chrome(executable_path=chrome_driver_exec,
+                                  options=opt)
 
 
 def _wait_css_selector(css):
